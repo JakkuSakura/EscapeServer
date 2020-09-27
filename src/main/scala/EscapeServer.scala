@@ -28,14 +28,14 @@ object EscapeServer extends Runnable {
                     if (p.active) local_player_count += 1
                     else return
                     p.update_number += 1
-                    if (p.need_to_reply_to_ping) {
-                        x.ctx.channel().writeAndFlush(new Pong(p.player_name).toByteBuf)
-                        p.need_to_reply_to_ping = false
-                    }
-                    if (p.need_to_send_playerlist) {
-                        x.ctx.channel().writeAndFlush(new PlayerList().toByteBuf)
-                        p.need_to_send_playerlist = false
-                    }
+//                    if (p.need_to_reply_to_ping) {
+//                        x.ctx.channel().writeAndFlush(new Pong(p.player_name).toByteBuf)
+//                        p.need_to_reply_to_ping = false
+//                    }
+//                    if (p.need_to_send_playerlist) {
+//                        x.ctx.channel().writeAndFlush(new PlayerList().toByteBuf)
+//                        p.need_to_send_playerlist = false
+//                    }
                     //If we didn't finish getting all the broadcast data last time
                     //We must do that now.
                     if (p.has_logged_on) {
@@ -99,34 +99,34 @@ object EscapeServer extends Runnable {
                         p.need_to_respawn = false
                     }
 
-                    if (p.need_to_send_lookupdate) {
-                        x.ctx.channel().writeAndFlush(new LookUpdate(p).toByteBuf)
-                        p.need_to_send_lookupdate = false;
-                    }
-                    //We're just logging in!
-                    if (p.need_to_spawn) {
-
-                        //Newer versions need not send this, maybe?
-                        x.ctx.channel().writeAndFlush(new WelcomeWorld(p).toByteBuf)
-
-                        p.need_to_spawn = false
-
-                        p.next_chunk_to_load = 0
-                        p.has_logged_on = true
-                        p.just_spawned = true;
-
-                        //For next time round we send to everyone
-                        //    uint8_t i;
-                        //    //Show us the rest of the players
-                        //    for( i = 0; i < MAX_PLAYERS; i++ )
-                        //    {
-                        //        if( i != playerid && Players[i].active )
-                        //        {
-                        //            SSpawnPlayer( i );
-                        //        }
-                        //    }
-
-                    }
+//                    if (p.need_to_send_lookupdate) {
+//                        x.ctx.channel().writeAndFlush(new LookUpdate(p).toByteBuf)
+//                        p.need_to_send_lookupdate = false;
+//                    }
+//                    //We're just logging in!
+//                    if (p.need_to_spawn) {
+//
+//                        //Newer versions need not send this, maybe?
+//                        x.ctx.channel().writeAndFlush(new WelcomeWorld(p).toByteBuf)
+//
+//                        p.need_to_spawn = false
+//
+//                        p.next_chunk_to_load = 0
+//                        p.has_logged_on = true
+//                        p.just_spawned = true;
+//
+//                        //For next time round we send to everyone
+//                        //    uint8_t i;
+//                        //    //Show us the rest of the players
+//                        //    for( i = 0; i < MAX_PLAYERS; i++ )
+//                        //    {
+//                        //        if( i != playerid && Players[i].active )
+//                        //        {
+//                        //            SSpawnPlayer( i );
+//                        //        }
+//                        //    }
+//
+//                    }
 
                     if (p.custom_preload_step) {
                         customPreloadStep()

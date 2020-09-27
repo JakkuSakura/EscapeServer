@@ -1,20 +1,51 @@
+import java.util.UUID
+
 import io.netty.buffer.ByteBuf
 import io.netty.util.CharsetUtil
 
-class PacketByteBuf(val buf: ByteBuf) extends DelegatedByteBuf(buf) {
+class PacketByteBuf(val buf: ByteBuf) {
+    def readableBytes: Int = buf.readableBytes()
+
+    def writableBytes: Int = buf.writableBytes()
+
+    def writeDouble(v: Double): Unit = buf.writeDouble(v)
+
+    def writeFloat(v: Float): Unit = buf.writeFloat(v)
+
+    def writeLong(v: Long): Unit = buf.writeLong(v)
+
+    def writeShort(v: Short): Unit = buf.writeShort(v)
+
+    def writeInt(v: Int): Unit = buf.writeInt(v)
+
+    def writeByte(v: Byte): Unit = buf.writeByte(v)
+
+    def readDouble(): Double = buf.readDouble()
+
+    def readFloat(): Float = buf.readFloat()
+
+    def readLong(): Long = buf.readLong()
+
+    def readShort(): Short = buf.readShort()
+
+    def readInt(): Int = buf.readInt()
+
+    def readByte(): Byte = buf.readByte()
 
     def writeString(str: String): Unit = {
         writeVarInt(str.length)
-        writeBuffer(str)
+        writeBytes(str)
     }
 
-    def writeBuffer(v: String): Unit = {
-        buf.writeBytes(v.getBytes())
-    }
+    def writeBytes(v: String): Unit = buf.writeBytes(v.getBytes())
 
-    def writeUnsignedByte(v: Byte): Unit = {
-        buf.writeByte(v)
-    }
+    def writeBytes(v: Array[Byte]): Unit = buf.writeBytes(v)
+
+    def writeBytes(v: ByteBuf): Unit = buf.writeBytes(buf)
+
+    def writeUnsignedByte(v: Byte): Unit = buf.writeByte(v)
+
+    def readBytes(i: Int): ByteBuf = buf.readBytes(i)
 
     def writeVarInt(v: Int): Unit = {
         var value = v
@@ -27,6 +58,11 @@ class PacketByteBuf(val buf: ByteBuf) extends DelegatedByteBuf(buf) {
         } while ( {
             value != 0
         })
+    }
+
+    def writeUUID(UUID: UUID): Unit = {
+        writeLong(UUID.getMostSignificantBits)
+        writeLong(UUID.getLeastSignificantBits)
     }
 
     def readVarInt(): Int = {
@@ -50,7 +86,7 @@ class PacketByteBuf(val buf: ByteBuf) extends DelegatedByteBuf(buf) {
         var result = 0
         var read = 0
         do {
-            read = buf.readByte()
+            read = readByte()
             val value = read & 0x7F
             result |= (value << (7 * numRead));
             numRead += 1;
