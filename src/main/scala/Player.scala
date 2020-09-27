@@ -1,5 +1,6 @@
 class Player {
-    var x, y, stance, z, yaw, pitch: Int = _
+    var player_id: Int = Configuration.newPlayerId()
+    var x, y, stance, z, yaw, pitch: Float = _
     var ox, oy, os, oz, ow, op: Int = _
 
     var n_yaw, n_pitch: Int = _
@@ -25,7 +26,7 @@ class Player {
     var player_is_up_and_running: Boolean = _ //Sent after the custom preload is done.
 
     var next_chunk_to_load: Int = _
-    var custom_preload_step: Int = _ //if nonzero, then do pre-load, when done, set to 0 and set p->need_to_send_lookupdate = 1;
+    var custom_preload_step: Boolean = _ //if nonzero, then do pre-load, when done, set to 0 and set p->need_to_send_lookupdate = 1;
 
     var need_to_respawn: Boolean = _
     var handshake_state: Int = _
@@ -35,7 +36,8 @@ class Player {
 
     var tick_since_update: Boolean = _
     var ticks_since_heard: Int = _
-    var playername: String = _
+    var player_name: String = _
+    var outcirctail: Int = _
 
     //	uint32_t keepalive_id; //can also be used for pinging
 }

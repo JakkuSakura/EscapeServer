@@ -1,32 +1,35 @@
-import scala.collection.IterableOnce.iterableOnceExtensionMethods
+import io.netty.channel.ChannelHandlerContext
 import scala.collection.mutable
 
 object EscapeServer extends Runnable {
-    val clients = new mutable.LinkedHashSet[Client]
+    val clients = new mutable.LinkedHashMap[ChannelHandlerContext, Client]
     var theThread: Thread = _
 
+    // TODO add a temp container
     def add_client(client: Client): Unit = clients.synchronized {
-        clients += client
+        clients(client.ctx) = client
     }
 
     def playerUpdate(player: Player): Unit = {
         // TODO
     }
 
+    def customPreloadStep(): Unit = {}
+
     def updateServer(): Unit = {
         val delta = 0x2faf080; // 50,000,000 nanoseconds (0.05 seconds)
-        var server_time = System.nanoTime();
-        do {
-            while (System.nanoTime() - server_time > delta) {
-                server_time += delta
-                var local_player_count = 0
-                clients.foreach(x => {
+        var server_time = System.nanoTime()
+        while (System.nanoTime() - server_time > delta) {
+            server_time += delta
+            var local_player_count = 0
+            clients.synchronized {
+                clients.foreachEntry((_, x) => {
                     val p = x.player
                     if (p.active) local_player_count += 1
                     else return
                     p.update_number += 1
                     if (p.need_to_reply_to_ping) {
-                        x.ctx.channel().writeAndFlush(new Pong(p.playername).toByteBuf)
+                        x.ctx.channel().writeAndFlush(new Pong(p.player_name).toByteBuf)
                         p.need_to_reply_to_ping = false
                     }
                     if (p.need_to_send_playerlist) {
@@ -68,10 +71,14 @@ object EscapeServer extends Runnable {
                         //It's too expensive to do the proper modulus on a floating point value.
                         //Additionally, we need to say stance++, otherwise we will fall through the ground when we turn around.
                         if (p.yaw < -11520) {
-                            p.yaw += 11520; p.need_to_send_lookupdate = true; p.stance += 1;
+                            p.yaw += 11520;
+                            p.need_to_send_lookupdate = true;
+                            p.stance += 1;
                         }
                         if (p.yaw > 11520) {
-                            p.yaw -= 11520; p.need_to_send_lookupdate = true; p.stance += 1;
+                            p.yaw -= 11520;
+                            p.need_to_send_lookupdate = true;
+                            p.stance += 1;
                         }
                         if (p.y < 0) p.need_to_respawn = true;
                     }
@@ -80,12 +87,10 @@ object EscapeServer extends Runnable {
 
                     //I used to do things here, it's a useful place to stick things that need to happen every tick..
                     //I don't really use it anymore
-                    if( p.tick_since_update )
-                    {
+                    if (p.tick_since_update) {
                         p.tick_since_update = false;
                     }
-                    if( p.need_to_respawn )
-                    {
+                    if (p.need_to_respawn) {
                         p.x = 0;
                         p.y = 64
                         p.stance = p.y; // + (1<<FIXEDPOINT);
@@ -94,140 +99,130 @@ object EscapeServer extends Runnable {
                         p.need_to_respawn = false
                     }
 
-                    if( p.need_to_send_lookupdate )
-                    {
+                    if (p.need_to_send_lookupdate) {
                         x.ctx.channel().writeAndFlush(new LookUpdate(p).toByteBuf)
                         p.need_to_send_lookupdate = false;
                     }
+                    //We're just logging in!
+                    if (p.need_to_spawn) {
+
+                        //Newer versions need not send this, maybe?
+                        x.ctx.channel().writeAndFlush(new WelcomeWorld(p).toByteBuf)
+
+                        p.need_to_spawn = false
+
+                        p.next_chunk_to_load = 0
+                        p.has_logged_on = true
+                        p.just_spawned = true;
+
+                        //For next time round we send to everyone
+                        //    uint8_t i;
+                        //    //Show us the rest of the players
+                        //    for( i = 0; i < MAX_PLAYERS; i++ )
+                        //    {
+                        //        if( i != playerid && Players[i].active )
+                        //        {
+                        //            SSpawnPlayer( i );
+                        //        }
+                        //    }
+
+                    }
+
+                    if (p.custom_preload_step) {
+                        customPreloadStep()
+                        p.custom_preload_step = false
+                        p.need_to_respawn = true
+                        p.player_is_up_and_running = true
+                        //This is when we checkin to the updates. (after we've sent the map chunk updates)
+                        //                        p.outcirctail = GetCurrentCircHead();
+                    }
+
+                    //Send the client a couple chunks to load on.
+                    //Right now we just send a bunch of copy-and-pasted chunks.
+                    //                    if( p.next_chunk_to_load != 0)
+                    //                    {
+                    //                   //			p.custom_preload_step = 1;
+                    //                   //			p.next_chunk_to_load = 0;
+                    //
+                    //                        val pnc = p.next_chunk_to_load
+                    //                        p.next_chunk_to_load += 1
+                    //
+                    //                        if( pnc == 2 )
+                    //                        {
+                    //                            SendRawPGMData( compeddata, sizeof(compeddata) );
+                    //                        }
+                    //
+                    //                        int chk = pnc - 3;
+                    //                        if( chk == 16 )
+                    //                        {
+                    //                            p.next_chunk_to_load = 0;
+                    //                            p.custom_preload_step = 1;
+                    //                        }
+                    //                        else
+                    //                        {
+                    //                            int k = 0;
+                    //                            for( k = 0; k < 16; k++ )
+                    //                                SblockInternal( k, 63, chk, 2, 0 );
+                    //                        }
+                    //                    }
+
                     /*
+                    //This is triggered when players want to actually join.
+                    if( p.need_to_login )
+                    {
+                        StartSend();
+                        Sbyte( 0x03 ); //Set compression threshold
+                        Svarint( 1000 ); //Arbitrary, so we only hit it when we send chunks.
+                        DoneSend();
 
-                     //We're just logging in!
-                     if( p.need_to_spawn )
-                     {
-                         uint8_t i;
+                        p.set_compression = 1;
 
-                         //Newer versions need not send this, maybe?
-                         StartSend();
-                         Sbyte( 0x23 );  //Updated (Join Game)
-                         Sint( (uint8_t)(playerid + PLAYER_LOGIN_EID_BASE) );
-                         Sbyte( GAMEMODE ); //creative
-                         Sint( WORLDTYPE ); //overworld
-                         Sbyte( 0 ); //peaceful
-                         Sbyte( MAX_PLAYERS );
-                         Sstring( "default", 7 );
-                         Sbyte( 0 ); //Reduce debug info?
-                         DoneSend();
+                        StartSend();
+                        Sbyte( 0x02 ); //Login success
+                        Suuid( playerid + PLAYER_LOGIN_EID_BASE );
+                        p.need_to_login = 0;
+                        Sstring( (const char*)p.playername, -1 );
+                        DoneSend();
 
-                         p.need_to_spawn = 0;
+                        //Do this, it is commented out for other reasons.
+                        p.need_to_spawn = 1;
 
-                         p.next_chunk_to_load = 1;
-                         p.has_logged_on = 1;
-                         p.just_spawned = 1;  //For next time round we send to everyone
-
-                         //Show us the rest of the players
-                         for( i = 0; i < MAX_PLAYERS; i++ )
-                         {
-                             if( i != playerid && Players[i].active )
-                             {
-                                 SSpawnPlayer( i );
-                             }
-                         }
-
-                     }
-                     if( p.custom_preload_step )
-                     {
-                         DoCustomPreloadStep( );
-                         p.custom_preload_step = 0;
-                         p.need_to_respawn = 1;
-                         p.player_is_up_and_running = 1;
-                         //This is when we checkin to the updates. (after we've sent the map chunk updates)
-                         p.outcirctail = GetCurrentCircHead();
-                     }
-
-                     //Send the client a couple chunks to load on.
-                     //Right now we just send a bunch of copy-and-pasted chunks.
-                     if( p.next_chunk_to_load )
-                     {
-                    //			p.custom_preload_step = 1;
-                    //			p.next_chunk_to_load = 0;
-
-                         int pnc = p.next_chunk_to_load++;
-
-                         if( pnc == 2 )
-                         {
-                             SendRawPGMData( compeddata, sizeof(compeddata) );
-                         }
-
-                         int chk = pnc - 3;
-                         if( chk == 16 )
-                         {
-                             p.next_chunk_to_load = 0;
-                             p.custom_preload_step = 1;
-                         }
-                         else
-                         {
-                             int k = 0;
-                             for( k = 0; k < 16; k++ )
-                                 SblockInternal( k, 63, chk, 2, 0 );
-                         }
-                     }
-
-                     //This is triggered when players want to actually join.
-                     if( p.need_to_login )
-                     {
-                         StartSend();
-                         Sbyte( 0x03 ); //Set compression threshold
-                         Svarint( 1000 ); //Arbitrary, so we only hit it when we send chunks.
-                         DoneSend();
-
-                         p.set_compression = 1;
-
-                         StartSend();
-                         Sbyte( 0x02 ); //Login success
-                         Suuid( playerid + PLAYER_LOGIN_EID_BASE );
-                         p.need_to_login = 0;
-                         Sstring( (const char*)p.playername, -1 );
-                         DoneSend();
-
-                         //Do this, it is commented out for other reasons.
-                         p.need_to_spawn = 1;
-
-                     }
+                    }
 
 
-                     if( p.need_to_send_keepalive )
-                     {
+                    if( p.need_to_send_keepalive )
+                    {
 
-                         StartSend();
-                         Sbyte( 0x1f );
-                         Svarint( dumbcraft_tick );
-                         DoneSend();
-                         p.need_to_send_keepalive = 0;
-                     }
+                        StartSend();
+                        Sbyte( 0x1f );
+                        Svarint( dumbcraft_tick );
+                        DoneSend();
+                        p.need_to_send_keepalive = 0;
+                    }
 
 
-                     if( p.has_logged_on && !p.doneupdatespeed )
-                     {
-                         UpdatePlayerSpeed( p.running?RUNSPEED:WALKSPEED );
-                         p.doneupdatespeed = 1;
-                     }
+                    if( p.has_logged_on && !p.doneupdatespeed )
+                    {
+                        UpdatePlayerSpeed( p.running?RUNSPEED:WALKSPEED );
+                        p.doneupdatespeed = 1;
+                    }
 
-                    now_sending_broadcast:
-                            //Apply any broadcast messages ... if we just spawned, then there's nothing to send.
-                            if( p.player_is_up_and_running )
-                            {
-                                p.did_not_clean_out_broadcast_last_time = UnloadCircularBufferOnThisClient( &p.outcirctail );
-                            }
+                   now_sending_broadcast:
+                           //Apply any broadcast messages ... if we just spawned, then there's nothing to send.
+                           if( p.player_is_up_and_running )
+                           {
+                               p.did_not_clean_out_broadcast_last_time = UnloadCircularBufferOnThisClient( &p.outcirctail );
+                           }
 
-                            EndSend();
-                        }
-                        dumbcraft_playercount = localplayercount;
-                     */
+                           EndSend();
+                       }
+                       dumbcraft_playercount = localplayercount;
+                    */
                 })
-
             }
-            Thread.sleep(5L);
-        } while (true);
+
+        }
+        Thread.sleep(5L)
     }
 
     /*

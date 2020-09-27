@@ -3,6 +3,7 @@ import io.netty.channel.ChannelInitializer
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder
 
 class ClientListener {
     def bind(host: String, port: Int): Unit = {
@@ -22,7 +23,8 @@ class ClientListener {
               //绑定I/O事件处理类
               .childHandler(new ChannelInitializer[SocketChannel] {
                   override def initChannel(ch: SocketChannel): Unit = {
-                      ch.pipeline().addLast(new RegisterClient())
+                      ch.pipeline().addLast(new PacketSplitter())
+                      ch.pipeline().addLast(new PacketParser())
                   }
               })
             val channelFuture = bootstrap.bind(host, port).sync()
