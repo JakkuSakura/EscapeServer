@@ -10,4 +10,6 @@ This will be a handwritten minimalist Minecraft server but not all about Minecra
 ## Credits
 Thank https://github.com/cnlohr/avrcraft for inspiration and simple implementation of Minecraft
 
-Thank https://wiki.vg/ for reverse engineering
+Thank https://wiki.vg/ for reverse engineering of protocols
+
+Thank https://github.com/barneygale/quarry/ for readable protocol examples
