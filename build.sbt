@@ -20,3 +20,6 @@ libraryDependencies += "io.netty" % "netty-tcnative" % "2.0.27.Final" classifier
 
 // Javassist boosts Netty 4 speed
 libraryDependencies += "org.javassist" % "javassist" % "3.26.0-GA"
+
+// https://mvnrepository.com/artifact/com.google.code.gson/gson
+libraryDependencies += "com.google.code.gson" % "gson" % "2.8.6"

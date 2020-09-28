@@ -41,7 +41,7 @@ class PacketByteBuf(val buf: ByteBuf) {
 
     def writeBytes(v: Array[Byte]): Unit = buf.writeBytes(v)
 
-    def writeBytes(v: ByteBuf): Unit = buf.writeBytes(buf)
+    def writeBytes(v: ByteBuf): Unit = buf.writeBytes(v)
 
     def writeUnsignedByte(v: Byte): Unit = buf.writeByte(v)
 

@@ -29,7 +29,6 @@ class Player {
     var custom_preload_step: Boolean = _ //if nonzero, then do pre-load, when done, set to 0 and set p->need_to_send_lookupdate = 1;
 
     var need_to_respawn: Boolean = _
-    var handshake_state: Int = _
     var update_number: Int = _
 
     var set_compression: Boolean = _ //Once set, need to handle packets differently.

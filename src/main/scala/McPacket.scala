@@ -3,7 +3,7 @@ import java.util.UUID
 import Configuration.{DIFFICULTY, GAMEMODE, PLAYER_LOGIN_EID_BASE, WORLDTYPE}
 import io.netty.buffer.{ByteBuf, Unpooled}
 
-class McPacket(protected var packet_id: Byte, buf: ByteBuf) extends PacketByteBuf(buf) {
+class McPacket(packet_id: Byte, buf: ByteBuf) extends PacketByteBuf(buf) {
 
     def this() = this(0, Unpooled.buffer())
 
@@ -14,9 +14,9 @@ class McPacket(protected var packet_id: Byte, buf: ByteBuf) extends PacketByteBu
     def this(packet_id: Int) = this(packet_id.toByte, Unpooled.buffer())
 
     // It seems like there is no packet id greater 0x7F yet
-    def getPacketId: Byte = packet_id
+    final def getPacketId: Byte = packet_id
 
-    def getData: ByteBuf = buf
+    final def getData: ByteBuf = buf
 
     override def toString: String = {
         String.format("Packet id: %02x\nData: %d\n", packet_id, readableBytes) + Utils.getHexAndChar(buf)
@@ -90,7 +90,7 @@ class EncryptionResponse(byteBuf: ByteBuf) extends McPacket(0x01, byteBuf) {
 }
 
 // Bound to client 0x01
-class EncryptionRequest() extends McPacket {
+class EncryptionRequest() extends McPacket(0x01) {
     writeString("")
     // Public Key
     writeVarInt(Crypto.KEYPAIR.getPublic.getEncoded.length)
@@ -99,23 +99,18 @@ class EncryptionRequest() extends McPacket {
     writeByte(4)
     writeBytes(Crypto.VERIFICATION_TOKEN)
 
-    override def getPacketId: Byte = 0x01
 }
 
 // Bound to client 0x03
 /** enable compression only if sending a non-negative value */
-class SetCompression(packets_before_compressed: Int) extends McPacket {
-    writeVarInt(packets_before_compressed)
-
-    override def getPacketId: Byte = 0x03
+class SetCompression(threshold: Int) extends McPacket(0x03) {
+    writeVarInt(threshold)
 }
 
 // Bound to client 0x02
-class LoginSuccess(UUID: UUID, username: String) extends McPacket {
-    writeUUID(UUID)
+class LoginSuccess(UUID: UUID, username: String) extends McPacket(0x02) {
+    writeString(UUID.toString)
     writeString(username)
-    packet_id = 0x02
-
 }
 
 class Pong(num: Long) extends McPacket(0x01) {

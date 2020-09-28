@@ -1,6 +1,11 @@
 import io.netty.buffer.ByteBuf
 
 object Utils {
+    def isPrintableChar(c: Char): Boolean = {
+        val block = Character.UnicodeBlock.of(c)
+        (!Character.isISOControl(c)) && c != '\uffff' && block != null && (block ne Character.UnicodeBlock.SPECIALS)
+    }
+
     def getHexAndChar(buf: ByteBuf): String = {
         val sb = new StringBuilder(buf.readableBytes() * 3 * 2 + 2)
         try {
@@ -11,14 +16,16 @@ object Utils {
             sb.append("\n")
 
             buf.forEachByte(x => {
-                if (x.toChar.isLetterOrDigit) {
-                    sb.append(String.format("%c  ", x + 128))
+                if (isPrintableChar(x.toChar)) {
+                    if (x < 0)
+                        sb.append(String.format("%c  ", x + 128))
+                    else
+                        sb.append(String.format("%c  ", x))
                 } else {
                     sb.append("** ")
                 }
                 true
             })
-            sb.append("\n")
             sb.toString()
         } catch {
             case ex: Exception =>

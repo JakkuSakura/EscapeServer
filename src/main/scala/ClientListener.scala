@@ -24,7 +24,7 @@ class ClientListener {
               .childHandler(new ChannelInitializer[SocketChannel] {
                   override def initChannel(ch: SocketChannel): Unit = {
                       ch.pipeline().addLast(new PacketSplitter())
-                      ch.pipeline().addLast(new PacketParser())
+                      ch.pipeline().addLast(new PacketProcessor())
                       ch.pipeline().addLast(new PacketEncoder())
                       println(ch.pipeline())
                   }
