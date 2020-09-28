@@ -3,7 +3,7 @@ import java.util.UUID
 import Configuration.{DIFFICULTY, GAMEMODE, PLAYER_LOGIN_EID_BASE, WORLDTYPE}
 import io.netty.buffer.{ByteBuf, Unpooled}
 
-class McPacket(packet_id: Byte, buf: ByteBuf) extends PacketByteBuf(buf) {
+class McPacket(private var packet_id: Byte, buf_ : ByteBuf) extends PacketByteBuf(buf_) {
 
     def this() = this(0, Unpooled.buffer())
 
@@ -17,6 +17,11 @@ class McPacket(packet_id: Byte, buf: ByteBuf) extends PacketByteBuf(buf) {
     final def getPacketId: Byte = packet_id
 
     final def getData: ByteBuf = buf
+
+    final def setPacketId(id: Byte): Unit = packet_id = id
+
+    final def setData(data: ByteBuf): Unit = buf = data
+
 
     override def toString: String = {
         String.format("Packet id: %02x\nData: %d\n", packet_id, readableBytes) + Utils.getHexAndChar(buf)
@@ -60,7 +65,7 @@ class LookUpdate(p: Player) extends McPacket(0x2E) {
 
 class WelcomeWorld(p: Player) extends McPacket(0x26) {
     // TODO see JoinGame 0x26
-    writeInt(p.player_id + PLAYER_LOGIN_EID_BASE);
+    writeInt(p.entity_id + PLAYER_LOGIN_EID_BASE);
     writeByte(GAMEMODE)
     writeInt(WORLDTYPE)
     writeByte(DIFFICULTY)
@@ -119,4 +124,15 @@ class LoginSuccess(UUID: UUID, username: String, protocol_version: Int) extends 
 
 class Pong(num: Long) extends McPacket(0x01) {
     writeLong(num)
+}
+class JoinGame(p: Player) extends McPacket(0x26) {
+    writeInt(p.entity_id)
+    writeUnsignedByte(p.game_mode)
+    writeInt(p.demension)
+    writeLong(EscapeServer.hashed_seed)
+    writeUnsignedByte(0) // max players
+    writeString("default") // level type like flat
+    writeVarInt(p.view_distance)
+    writeBoolean(false) // reduced debug
+    writeBoolean(false) // enable respawn screen
 }

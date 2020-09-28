@@ -2,11 +2,18 @@ import io.netty.channel.ChannelHandlerContext
 import scala.collection.concurrent
 
 object EscapeServer extends Runnable {
+    // First 8 bytes of the SHA-1 hash of the world's seed.
+    var hashed_seed: Long = 0
 
     val clients = new concurrent.TrieMap[String, Client]
     var theThread: Thread = _
 
-    def add_client(client: Client): Unit = clients(client.player.player_name) = client
+    def add_client(client: Client): Unit = {
+        clients(client.player.player_name) = client
+        client.ctx.writeAndFlush(new JoinGame(client.player))
+        // TODO broadcast to everyone else
+        // TODO send chunks
+    }
 
     def removeClient(id: String): Unit = clients.remove(id)
 

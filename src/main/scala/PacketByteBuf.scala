@@ -3,7 +3,7 @@ import java.util.UUID
 import io.netty.buffer.ByteBuf
 import io.netty.util.CharsetUtil
 
-class PacketByteBuf(val buf: ByteBuf) {
+class PacketByteBuf(var buf: ByteBuf) {
     def readableBytes: Int = buf.readableBytes()
 
     def writableBytes: Int = buf.writableBytes()
@@ -46,6 +46,8 @@ class PacketByteBuf(val buf: ByteBuf) {
     def writeUnsignedByte(v: Byte): Unit = buf.writeByte(v)
 
     def readBytes(i: Int): ByteBuf = buf.readBytes(i)
+
+    def writeBoolean(b: Boolean): Unit = writeByte(if (b) 1 else 0)
 
     def writeVarInt(v: Int): Unit = {
         var value = v

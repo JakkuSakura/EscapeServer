@@ -79,10 +79,11 @@ class PacketProcessor extends SimpleChannelInboundHandler[McPacket] {
                         ctx.channel().writeAndFlush(new LoginSuccess(UUID.randomUUID(), client.player.player_name, client.protocol_version))
                         client.connection_state = Client.PLAY
                         EscapeServer.add_client(client)
+
                     case _ => println("Unknown")
                 }
             case Client.PLAY =>
-            // TODO
+                // Nothing
             case _ => println("Unknown")
         }
     }

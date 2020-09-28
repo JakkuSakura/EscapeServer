@@ -16,10 +16,10 @@ object Configuration {
     val PLAYER_EID_BASE = 0x20
     val PLAYER_LOGIN_EID_BASE = 0x40
     val MAX_CHATLEN = 100
-    private val player_id_count = new AtomicInteger(0)
+    private val entity_id = new AtomicInteger(0)
     val ENABLE_ENCRYPTION: Boolean = false
 
-    def newPlayerId(): Int = {
-        player_id_count.getAndIncrement()
+    def newEntityId(): Int = {
+        entity_id.getAndIncrement()
     }
 }

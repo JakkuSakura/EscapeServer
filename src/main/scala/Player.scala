@@ -1,5 +1,13 @@
 class Player {
-    var player_id: Int = Configuration.newPlayerId()
+    var view_distance: Int = 8
+
+    var entity_id: Int = Configuration.newEntityId()
+    var game_mode: Byte = 1
+    // 0: Survival, 1: Creative, 2: Adventure, 3: Spectator. Bit 3 is the hardcore flag
+
+    var demension: Int = 0
+    // -1: Nether, 0: Overworld, 1: End; also, note that this is not aVarInt but instead a regular int
+
     var x, y, stance, z, yaw, pitch: Float = _
     var ox, oy, os, oz, ow, op: Int = _
 
