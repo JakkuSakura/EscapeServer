@@ -108,8 +108,12 @@ class SetCompression(threshold: Int) extends McPacket(0x03) {
 }
 
 // Bound to client 0x02
-class LoginSuccess(UUID: UUID, username: String) extends McPacket(0x02) {
-    writeString(UUID.toString)
+class LoginSuccess(UUID: UUID, username: String, protocol_version: Int) extends McPacket(0x02) {
+    if (protocol_version > 578) {
+        writeUUID(UUID)
+    } else {
+        writeString(UUID.toString)
+    }
     writeString(username)
 }
 

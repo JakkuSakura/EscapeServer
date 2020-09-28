@@ -20,6 +20,7 @@ class PacketProcessor extends SimpleChannelInboundHandler[McPacket] {
                 val hs = new HandShaking(packet.getData)
                 println("Next state: " + hs.next_state + ", protocol version: " + hs.protocol_version)
                 client.connection_state = hs.next_state
+                client.protocol_version = hs.protocol_version
             }
             case Client.STATUS => packet.getPacketId match {
                 // Request, Empty packet
@@ -55,7 +56,7 @@ class PacketProcessor extends SimpleChannelInboundHandler[McPacket] {
                             ctx.channel().writeAndFlush(new EncryptionRequest())
                             println("Sent encryption request")
                         } else {
-                            ctx.channel().writeAndFlush(new LoginSuccess(UUID.randomUUID(), client.player.player_name))
+                            ctx.channel().writeAndFlush(new LoginSuccess(UUID.randomUUID(), client.player.player_name, client.protocol_version))
                             client.connection_state = Client.PLAY
                             EscapeServer.add_client(client)
                         }
@@ -75,7 +76,7 @@ class PacketProcessor extends SimpleChannelInboundHandler[McPacket] {
                         // ctx.channel().writeAndFlush(new SetCompression(-1))
 
                         // 8. S→C: Login Success
-                        ctx.channel().writeAndFlush(new LoginSuccess(UUID.randomUUID(), client.player.player_name))
+                        ctx.channel().writeAndFlush(new LoginSuccess(UUID.randomUUID(), client.player.player_name, client.protocol_version))
                         client.connection_state = Client.PLAY
                         EscapeServer.add_client(client)
                     case _ => println("Unknown")

@@ -1,6 +1,7 @@
 import io.netty.channel.ChannelHandlerContext
 
 class Client(var ctx: ChannelHandlerContext, var player: Player) {
+    var protocol_version: Int = 0
     var connection_state: Int = 0
 }
 object Client {
