@@ -5,11 +5,9 @@ import game.Player
 
 class Client(var ctx: ChannelHandlerContext, var player: Player) {
     var protocol_version: Int = 0
-    var connection_state: Int = 0
+    var connection_state: ConnectionState.Value = ConnectionState.HANDSHAKE
 }
-object Client {
-    val HANDSHAKE = 0
-    val STATUS = 1
-    val LOGIN = 2
-    val PLAY = 3
+
+object ConnectionState extends Enumeration {
+    val HANDSHAKE, STATUS, LOGIN, PLAY = Value
 }

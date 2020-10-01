@@ -1,26 +1,18 @@
 package game
 
-import java.util.UUID
-
 import scala.collection.mutable
 abstract class World {
     def getBlock(x: Int, y: Int, z: Int): Block
-    def getMetaBlock(UUID: UUID): MetaBlock
 }
 
 class CubedWorld extends World {
-    private val map = Array.ofDim[Block](256, 256, 256)
-    private val uuid2block = new mutable.HashMap[UUID, MetaBlock]()
+    private val map = Array.ofDim[Int](256, 256, 256)
+    private val palette = new mutable.HashMap[Int, String]()
+    private val extra_data = new mutable.HashMap[Int, NBT]()
     override def getBlock(x: Int, y: Int, z: Int): Block = {
-        val block = map(x)(y)(z)
-        if (block == null) {
-            BlockCollection.Air.asInstanceOf[Block]
-        } else {
-            block
-        }
+        val block_in_chunk = map(x)(y)(z)
+        val block_type = palette.get(block_in_chunk).orNull
+        BlockCollection.getBlock(block_type).getOrElse(BlockCollection.UnknownBlock)
     }
 
-    override def getMetaBlock(UUID: UUID): MetaBlock = {
-        uuid2block(UUID)
-    }
 }
