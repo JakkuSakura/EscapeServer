@@ -8,11 +8,11 @@ import utils.Configuration
 
 class HandshakeHandler(ch: InClientHandler, client: Client) extends PacketHandler{
     def login(): Unit = {
-        client.ctx.writeAndFlush(new LoginSuccess(UUID.randomUUID(), client.player.player_name, client.protocol_version))
+        client.ctx.channel().writeAndFlush(new LoginSuccess(UUID.randomUUID(), client.player.player_name, client.protocol_version))
         client.connection_state = ConnectionState.PLAY
         ch.current_handler = new PlayHandler()
         EscapeServer.add_client(client.player)
-        client.ctx.writeAndFlush(new JoinGame(client.player))
+        client.ctx.channel().writeAndFlush(new JoinGame(client.player))
     }
 
     def apply(packet: McPacket): Unit = {
