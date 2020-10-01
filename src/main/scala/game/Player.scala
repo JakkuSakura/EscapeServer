@@ -1,3 +1,7 @@
+package game
+
+import utils.Configuration
+
 class Player {
     var view_distance: Int = 8
 

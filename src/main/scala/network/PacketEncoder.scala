@@ -1,7 +1,8 @@
+package network
+
 import io.netty.buffer.{ByteBuf, Unpooled}
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.MessageToByteEncoder
-import io.netty.util.CharsetUtil
 
 class PacketEncoder extends MessageToByteEncoder[McPacket] {
     override def encode(ctx: ChannelHandlerContext, msg: McPacket, out: ByteBuf): Unit = {

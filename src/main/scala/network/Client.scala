@@ -1,4 +1,7 @@
+package network
+
 import io.netty.channel.ChannelHandlerContext
+import game.Player
 
 class Client(var ctx: ChannelHandlerContext, var player: Player) {
     var protocol_version: Int = 0

@@ -1,3 +1,5 @@
+package network
+
 import java.util
 
 import io.netty.buffer.ByteBuf

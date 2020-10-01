@@ -1,7 +1,11 @@
+package network
+
 import java.util.UUID
 
-import Configuration.{DIFFICULTY, GAMEMODE, PLAYER_LOGIN_EID_BASE, WORLDTYPE}
+import game.{EscapeServer, Player}
 import io.netty.buffer.{ByteBuf, Unpooled}
+import utils.Configuration.{DIFFICULTY, GAMEMODE, PLAYER_LOGIN_EID_BASE, WORLDTYPE}
+import utils.{Crypto, Utils}
 
 class McPacket(private var packet_id: Byte, buf_ : ByteBuf) extends PacketByteBuf(buf_) {
 
@@ -28,7 +32,7 @@ class McPacket(private var packet_id: Byte, buf_ : ByteBuf) extends PacketByteBu
     }
 }
 
-//class PlayerList() extends McPacket {
+//class PlayerList() extends network.McPacket {
 //    override def getData: ByteBuf = {
 //        TODO implement this
 //        unsigned length = sizeof( pingjson1 ) + sizeof( pingjson2 ) + sizeof( pingjson3 ) + sizeof( pingjson4 ) + 24 + strlen( MOTD_NAME );
@@ -64,7 +68,7 @@ class LookUpdate(p: Player) extends McPacket(0x2E) {
 }
 
 class WelcomeWorld(p: Player) extends McPacket(0x26) {
-    // TODO see JoinGame 0x26
+    // TODO see network.JoinGame 0x26
     writeInt(p.entity_id + PLAYER_LOGIN_EID_BASE);
     writeByte(GAMEMODE)
     writeInt(WORLDTYPE)

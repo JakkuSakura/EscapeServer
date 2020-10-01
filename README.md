@@ -7,6 +7,18 @@ This will be a handwritten minimalist Minecraft server but not all about Minecra
 - [ ] Multiplayer
 - [ ] High Performance
 
+## Network Protocol
+Protocol 578 of Minecraft 1.15.2
+
+## Architecture
+Cluster - Node(\*) - Worlds - Blocks/Entities
+
+Worlds - Pages(16*16 blocks) - game.Chunk(16\*16\*256 blocks, using Quadtree and ) - game.Block
+
+Message Queue
+
+Multithreading
+
 ## Credits
 Thank https://github.com/cnlohr/avrcraft for inspiration and simple implementation of Minecraft
 

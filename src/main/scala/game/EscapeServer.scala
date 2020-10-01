@@ -1,4 +1,7 @@
-import io.netty.channel.ChannelHandlerContext
+package game
+
+import network.{Client, JoinGame}
+
 import scala.collection.concurrent
 
 object EscapeServer extends Runnable {
@@ -35,7 +38,7 @@ object EscapeServer extends Runnable {
                 else return
                 p.update_number += 1
                 //                    if (p.need_to_reply_to_ping) {
-                //                        x.ctx.channel().writeAndFlush(new Pong(p.player_name).toByteBuf)
+                //                        x.ctx.channel().writeAndFlush(new network.Pong(p.player_name).toByteBuf)
                 //                        p.need_to_reply_to_ping = false
                 //                    }
                 //                    if (p.need_to_send_playerlist) {
@@ -106,14 +109,14 @@ object EscapeServer extends Runnable {
                 }
 
                 //                    if (p.need_to_send_lookupdate) {
-                //                        x.ctx.channel().writeAndFlush(new LookUpdate(p).toByteBuf)
+                //                        x.ctx.channel().writeAndFlush(new network.LookUpdate(p).toByteBuf)
                 //                        p.need_to_send_lookupdate = false;
                 //                    }
                 //                    //We're just logging in!
                 //                    if (p.need_to_spawn) {
                 //
                 //                        //Newer versions need not send this, maybe?
-                //                        x.ctx.channel().writeAndFlush(new WelcomeWorld(p).toByteBuf)
+                //                        x.ctx.channel().writeAndFlush(new network.WelcomeWorld(p).toByteBuf)
                 //
                 //                        p.need_to_spawn = false
                 //
@@ -252,7 +255,7 @@ object EscapeServer extends Runnable {
 
         for( playerid = 0; playerid < MAX_PLAYERS; playerid++ )
         {
-            struct Player * p = &Players[playerid];
+            struct game.Player * p = &Players[playerid];
             if( !p->active ) continue;
 
             //Send a keep-alive every so often

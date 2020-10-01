@@ -1,5 +1,7 @@
-import java.security.interfaces.{RSAPrivateKey, RSAPublicKey}
-import java.security._
+package utils
+
+import java.security.{Key, KeyPair, KeyPairGenerator, NoSuchAlgorithmException}
+
 import javax.crypto.Cipher
 
 object Crypto {
@@ -11,7 +13,8 @@ object Crypto {
 
     /**
      * Create rsa keys
-     * @param length: length of keys
+     *
+     * @param length : length of keys
      * @return KeyStore
      */
     @throws[NoSuchAlgorithmException]

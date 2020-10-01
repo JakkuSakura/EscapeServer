@@ -1,3 +1,5 @@
+package network
+
 import java.util.UUID
 
 import io.netty.buffer.ByteBuf

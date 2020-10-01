@@ -1,7 +1,11 @@
+package network
+
 import java.util.UUID
 
+import game.{EscapeServer, Player}
 import io.netty.buffer.Unpooled
-import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler};
+import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
+import utils.Configuration;
 
 class PacketProcessor extends SimpleChannelInboundHandler[McPacket] {
     var client: Client = _
@@ -37,7 +41,7 @@ class PacketProcessor extends SimpleChannelInboundHandler[McPacket] {
                     ctx.channel().writeAndFlush(response)
                 // Ping
                 case 0x01 =>
-                    // Pong
+                    // network.Pong
                     ctx.channel().writeAndFlush(packet)
                     ctx.close()
             }
@@ -46,7 +50,7 @@ class PacketProcessor extends SimpleChannelInboundHandler[McPacket] {
                     case 0x00 =>
                         // 2. C→S: Login Start
                         val login_start = new LoginStart(packet.getData)
-                        println("Player name: " + login_start.player_name)
+                        println("game.Player name: " + login_start.player_name)
                         client.player = new Player()
 
                         client.player.player_name = login_start.player_name
@@ -63,7 +67,7 @@ class PacketProcessor extends SimpleChannelInboundHandler[McPacket] {
 
 
                     case 0x01 =>
-                        // 4. Client auth
+                        // 4. network.Client auth
                         // 5. C→S: Encryption Response
                         val en_res = new EncryptionResponse(packet.getData)
                         println(en_res)
@@ -73,7 +77,7 @@ class PacketProcessor extends SimpleChannelInboundHandler[McPacket] {
 
                         // 7. S→C: Set Compression (optional)
                         // no compression if no sending
-                        // ctx.channel().writeAndFlush(new SetCompression(-1))
+                        // ctx.channel().writeAndFlush(new network.SetCompression(-1))
 
                         // 8. S→C: Login Success
                         ctx.channel().writeAndFlush(new LoginSuccess(UUID.randomUUID(), client.player.player_name, client.protocol_version))

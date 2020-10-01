@@ -1,9 +1,11 @@
+package utils
+
 import java.util.concurrent.atomic.AtomicInteger
 
 object Configuration {
 
     val WORLDTYPE = 0 //Overworld
-    val GAMEMODE: Byte = 0  //creative
+    val GAMEMODE: Byte = 0 //creative
     val DIFFICULTY: Byte = 0 // peaceful
     val MAX_PLAYERS = 10
 

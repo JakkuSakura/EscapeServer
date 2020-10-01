@@ -1,9 +1,11 @@
+package network
+
+import game.EscapeServer
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder
 
 class ClientListener {
     def bind(host: String, port: Int): Unit = {
