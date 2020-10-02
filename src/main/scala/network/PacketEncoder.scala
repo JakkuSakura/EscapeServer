@@ -6,7 +6,7 @@ import io.netty.handler.codec.MessageToByteEncoder
 
 class PacketEncoder extends MessageToByteEncoder[McPacket] {
     override def encode(ctx: ChannelHandlerContext, msg: McPacket, out: ByteBuf): Unit = {
-        println("Writing:" + msg)
+        println("Writing packet " + msg.getClass.getCanonicalName)
 
         val packet_id_buf = new PacketByteBuf(Unpooled.buffer())
         packet_id_buf.writeVarInt(msg.getPacketId)

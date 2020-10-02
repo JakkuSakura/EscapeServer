@@ -2,7 +2,7 @@ package game
 
 /**
  * File from https://github.com/johnr1/quadtree-scala/blob/master/src/main/scala/QuadTree.scala
- * Modified by Jiangkun QIiu
+ * Modified by Jiangkun Qiu
  */
 
 import scala.collection.mutable

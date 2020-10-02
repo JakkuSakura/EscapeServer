@@ -2,7 +2,7 @@ package network
 
 import java.util.UUID
 
-import game.{EscapeServer, Player}
+import game.{EscapeServer, NBT, Player}
 import io.netty.buffer.{ByteBuf, Unpooled}
 import utils.Configuration.{DIFFICULTY, GAMEMODE, PLAYER_LOGIN_EID_BASE, WORLDTYPE}
 import utils.{Crypto, Utils}
@@ -74,7 +74,7 @@ class WelcomeWorld(p: Player) extends McPacket(0x26) {
     writeInt(WORLDTYPE)
     writeByte(DIFFICULTY)
     writeByte(0) // deprecated MAX_PLAYERS
-    writeString("default")
+    writeVarString("default")
     writeByte(0); //Reduce debug info?
 
 }
@@ -100,7 +100,7 @@ class EncryptionResponse(byteBuf: ByteBuf) extends McPacket(0x01, byteBuf) {
 
 // Bound to client 0x01
 class EncryptionRequest() extends McPacket(0x01) {
-    writeString("")
+    writeVarString("")
     // Public Key
     writeVarInt(Crypto.KEYPAIR.getPublic.getEncoded.length)
     writeBytes(Crypto.KEYPAIR.getPublic.getEncoded)
@@ -121,22 +121,27 @@ class LoginSuccess(UUID: UUID, username: String, protocol_version: Int) extends 
     if (protocol_version > 578) {
         writeUUID(UUID)
     } else {
-        writeString(UUID.toString)
+        writeVarString(UUID.toString)
     }
-    writeString(username)
+    writeVarString(username)
 }
-
+// Bound to client 0x01
 class Pong(num: Long) extends McPacket(0x01) {
     writeLong(num)
 }
+// Bound to client 0x26
 class JoinGame(p: Player) extends McPacket(0x26) {
     writeInt(p.entity_id)
-    writeUnsignedByte(p.game_mode)
-    writeInt(p.demension)
+    writeByte(p.game_mode.id.toByte)
+    writeInt(p.dimension.id)
     writeLong(EscapeServer.hashed_seed)
-    writeUnsignedByte(0) // max players
-    writeString("default") // level type like flat
+    writeByte(0) // max players
+    writeVarString("default") // level type like flat
     writeVarInt(p.view_distance)
     writeBoolean(false) // reduced debug
     writeBoolean(false) // enable respawn screen
+}
+// Bound to client 0x40
+class HeldItemChange(slot: Byte) extends McPacket(0x40) {
+    writeByte(slot)
 }

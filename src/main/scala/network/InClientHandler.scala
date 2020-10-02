@@ -18,7 +18,7 @@ class InClientHandler extends SimpleChannelInboundHandler[McPacket] {
     }
 
     override def channelRead0(ctx: ChannelHandlerContext, packet: McPacket): Unit = {
-        println("ChannelRead invoked:" + packet)
+        println("Received a packet:" + packet)
         current_handler(packet)
 
     }

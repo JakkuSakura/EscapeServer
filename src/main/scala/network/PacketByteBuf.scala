@@ -34,9 +34,19 @@ class PacketByteBuf(var buf: ByteBuf) {
 
     def readByte(): Byte = buf.readByte()
 
-    def writeString(str: String): Unit = {
+    def writeVarString(str: String): Unit = {
         writeVarInt(str.length)
         writeBytes(str)
+    }
+
+    def writeVarBytes(bytes: Seq[Byte]): Unit = {
+        writeVarInt(bytes.length)
+        writeBytes(bytes.toArray)
+    }
+
+    def writeVarBytes(buf: ByteBuf): Unit = {
+        writeVarInt(buf.readableBytes())
+        writeBytes(buf)
     }
 
     def writeBytes(v: String): Unit = buf.writeBytes(v.getBytes())
@@ -45,24 +55,11 @@ class PacketByteBuf(var buf: ByteBuf) {
 
     def writeBytes(v: ByteBuf): Unit = buf.writeBytes(v)
 
-    def writeUnsignedByte(v: Byte): Unit = buf.writeByte(v)
-
     def readBytes(i: Int): ByteBuf = buf.readBytes(i)
 
     def writeBoolean(b: Boolean): Unit = writeByte(if (b) 1 else 0)
 
-    def writeVarInt(v: Int): Unit = {
-        var value = v
-        do {
-            var temp = (value & 0x7F).toByte
-            // Note: >>> means that the sign bit is shifted with the rest of the number rather than being left alone
-            value >>>= 7
-            if (value != 0) temp = (temp | 0x80).toByte
-            writeByte(temp)
-        } while ( {
-            value != 0
-        })
-    }
+    def writeVarInt(v: Int): Unit = writeVarLong(v)
 
     def writeUUID(UUID: UUID): Unit = {
         writeLong(UUID.getMostSignificantBits)

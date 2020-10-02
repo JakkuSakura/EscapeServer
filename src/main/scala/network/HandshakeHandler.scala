@@ -13,6 +13,8 @@ class HandshakeHandler(ch: InClientHandler, client: Client) extends PacketHandle
         ch.current_handler = new PlayHandler()
         EscapeServer.add_client(client.player)
         client.ctx.channel().writeAndFlush(new JoinGame(client.player))
+        client.ctx.channel().writeAndFlush(new HeldItemChange(0))
+
     }
 
     def apply(packet: McPacket): Unit = {
@@ -36,8 +38,7 @@ class HandshakeHandler(ch: InClientHandler, client: Client) extends PacketHandle
                       "\"description\":{\"text\":\"Escape Server\"}}"
                     // TODO add image here
 
-                    response.writeString(json)
-
+                    response.writeVarString(json)
                     ctx.channel().writeAndFlush(response)
                 // Ping
                 case 0x01 =>

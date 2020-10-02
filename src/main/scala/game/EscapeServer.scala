@@ -1,6 +1,6 @@
 package game
 
-import messages.{MUserLogin, MessageQueue}
+import messages.{MUserLogin, MUserLogout, MessageQueue}
 import network.Client
 
 import scala.collection.concurrent
@@ -18,7 +18,10 @@ object EscapeServer extends Runnable {
         message_queue.broadcast(MUserLogin(player.player_name))
     }
 
-    def removeClient(id: String): Unit = clients.remove(id)
+    def removeClient(id: String): Unit = {
+        if(clients.remove(id).isDefined)
+            message_queue.broadcast(MUserLogout(id))
+    }
 
     def playerUpdate(player: Player): Unit = {
     }

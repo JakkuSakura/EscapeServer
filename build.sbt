@@ -23,3 +23,7 @@ libraryDependencies += "org.javassist" % "javassist" % "3.26.0-GA"
 
 // https://mvnrepository.com/artifact/com.google.code.gson/gson
 libraryDependencies += "com.google.code.gson" % "gson" % "2.8.6"
+
+resolvers += "Jitpack" at "https://jitpack.io/"
+libraryDependencies += "com.github.Querz" % "NBT" % "5.2"
+libraryDependencies += "com.github.Steveice10" % "MCProtocolLib" % "1.15.2-1"

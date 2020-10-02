@@ -20,7 +20,6 @@ class PacketSplitter() extends ByteToMessageDecoder {
                 val data = buf.readBytes(length - read_length)
                 val packet = new McPacket(packet_id, data)
                 out.add(packet)
-                println("Received a packet")
             }
 
         } catch {
