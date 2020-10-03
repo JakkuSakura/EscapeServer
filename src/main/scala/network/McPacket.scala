@@ -2,7 +2,7 @@ package network
 
 import java.util.UUID
 
-import game.{EscapeServer, NBT, Player}
+import game.{Server, NBT, Player}
 import io.netty.buffer.{ByteBuf, Unpooled}
 import utils.Configuration.{DIFFICULTY, GAMEMODE, PLAYER_LOGIN_EID_BASE, WORLDTYPE}
 import utils.{Crypto, Utils}
@@ -134,7 +134,7 @@ class JoinGame(p: Player) extends McPacket(0x26) {
     writeInt(p.entity_id)
     writeByte(p.game_mode.id.toByte)
     writeInt(p.dimension.id)
-    writeLong(EscapeServer.hashed_seed)
+    writeLong(Server.hashed_seed)
     writeByte(0) // max players
     writeVarString("default") // level type like flat
     writeVarInt(p.view_distance)

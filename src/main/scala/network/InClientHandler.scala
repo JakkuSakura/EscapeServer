@@ -1,6 +1,6 @@
 package network
 
-import game.EscapeServer
+import game.Server
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
 
 trait PacketHandler {
@@ -26,7 +26,7 @@ class InClientHandler extends SimpleChannelInboundHandler[McPacket] {
     override def channelInactive(ctx: ChannelHandlerContext): Unit = {
         println("Inactive " + ctx)
         if (client.player != null)
-            EscapeServer.removeClient(client.player.player_name)
+            Server.removePlayer(client.player.player_name)
         client = null
     }
 }

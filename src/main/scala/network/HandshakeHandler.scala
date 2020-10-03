@@ -2,19 +2,16 @@ package network
 
 import java.util.UUID
 
-import game.{EscapeServer, Player}
+import game.{Server, Player}
 import io.netty.buffer.Unpooled
 import utils.Configuration
+
 
 class HandshakeHandler(ch: InClientHandler, client: Client) extends PacketHandler{
     def login(): Unit = {
         client.ctx.channel().writeAndFlush(new LoginSuccess(UUID.randomUUID(), client.player.player_name, client.protocol_version))
         client.connection_state = ConnectionState.PLAY
-        ch.current_handler = new PlayHandler()
-        EscapeServer.add_client(client.player)
-        client.ctx.channel().writeAndFlush(new JoinGame(client.player))
-        client.ctx.channel().writeAndFlush(new HeldItemChange(0))
-
+        ch.current_handler = new PlayHandler(client)
     }
 
     def apply(packet: McPacket): Unit = {

@@ -1,11 +1,13 @@
 package network
 
+import java.io.IOException
 import java.util.UUID
 
+import com.github.steveice10.packetlib.io.NetOutput
 import io.netty.buffer.ByteBuf
 import io.netty.util.CharsetUtil
 
-class PacketByteBuf(var buf: ByteBuf) {
+class PacketByteBuf(var buf: ByteBuf) extends NetOutput {
     def readableBytes: Int = buf.readableBytes()
 
     def writableBytes: Int = buf.writableBytes()
@@ -57,10 +59,6 @@ class PacketByteBuf(var buf: ByteBuf) {
 
     def readBytes(i: Int): ByteBuf = buf.readBytes(i)
 
-    def writeBoolean(b: Boolean): Unit = writeByte(if (b) 1 else 0)
-
-    def writeVarInt(v: Int): Unit = writeVarLong(v)
-
     def writeUUID(UUID: UUID): Unit = {
         writeLong(UUID.getMostSignificantBits)
         writeLong(UUID.getLeastSignificantBits)
@@ -73,10 +71,10 @@ class PacketByteBuf(var buf: ByteBuf) {
         do {
             read = buf.readByte()
             val value = read & 0x7F
-            result |= (value << (7 * numRead));
+            result |= (value << (7 * numRead))
             numRead += 1
             if (numRead > 5) {
-                throw new RuntimeException("VarInt is too big");
+                throw new RuntimeException("VarInt is too big")
             }
         } while ((read & 0x80) != 0);
         result
@@ -92,26 +90,105 @@ class PacketByteBuf(var buf: ByteBuf) {
             result |= (value << (7 * numRead));
             numRead += 1;
             if (numRead > 10) {
-                throw new RuntimeException("VarInt is too big");
+                throw new RuntimeException("VarInt is too big")
             }
         } while ((read & 0x80) != 0)
         result
     }
 
-    def writeVarLong(v: Long): Unit = {
-        var value = v
-        do {
-            var temp = (value & 0x7F).toByte
-            value >>>= 7
-            if (value != 0) temp = (temp | 0x80).toByte
-            writeByte(temp)
-        } while ( {
-            value != 0
-        })
-    }
-
     def readString(): String = {
         val length = readVarInt()
         readBytes(length).toString(CharsetUtil.UTF_8)
+    }
+
+    @throws[IOException]
+    override def writeBoolean(b: Boolean): Unit = {
+        this.buf.writeBoolean(b)
+    }
+
+    @throws[IOException]
+    override def writeByte(b: Int): Unit = {
+        this.buf.writeByte(b)
+    }
+
+    @throws[IOException]
+    override def writeShort(s: Int): Unit = {
+        this.buf.writeShort(s)
+    }
+
+    @throws[IOException]
+    override def writeChar(c: Int): Unit = {
+        this.buf.writeChar(c)
+    }
+
+    @throws[IOException]
+    override def writeVarInt(i_ : Int): Unit = {
+        var i = i_
+        while ( {
+            (i & ~0x7F) != 0
+        }) {
+            this.writeByte((i & 0x7F) | 0x80)
+            i >>>= 7
+        }
+        this.writeByte(i)
+    }
+
+    @throws[IOException]
+    override def writeVarLong(l_ : Long): Unit = {
+        var l = l_
+        while ( {
+            (l & ~0x7F) != 0
+        }) {
+            this.writeByte((l & 0x7F).toInt | 0x80)
+            l >>>= 7
+        }
+        this.writeByte(l.toInt)
+    }
+
+    override def writeBytes(b: Array[Byte], length: Int): Unit = {
+        this.buf.writeBytes(b, 0, length)
+    }
+
+    override def writeShorts(s: Array[Short]): Unit = {
+        this.writeShorts(s, s.length)
+    }
+
+    override def writeShorts(s: Array[Short], length: Int): Unit = {
+        for (index <- 0 until length) {
+            this.writeShort(s(index))
+        }
+    }
+
+    override def writeInts(i: Array[Int]): Unit = {
+        this.writeInts(i, i.length)
+    }
+
+    override def writeInts(i: Array[Int], length: Int): Unit = {
+        for (index <- 0 until length) {
+            this.writeInt(i(index))
+        }
+    }
+
+    override def writeLongs(l: Array[Long]): Unit = {
+        this.writeLongs(l, l.length)
+    }
+
+    override def writeLongs(l: Array[Long], length: Int): Unit = {
+        for (index <- 0 until length) {
+            this.writeLong(l(index))
+        }
+    }
+
+    override def writeString(s: String): Unit = {
+        if (s == null) throw new IllegalArgumentException("String cannot be null!")
+        val bytes = s.getBytes("UTF-8")
+        if (bytes.length > 32767) throw new IOException("String too big (was " + s.length + " bytes encoded, max " + 32767 + ")")
+        else {
+            this.writeVarInt(bytes.length)
+            this.writeBytes(bytes)
+        }
+    }
+
+    override def flush(): Unit = {
     }
 }

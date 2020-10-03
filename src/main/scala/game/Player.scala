@@ -13,6 +13,8 @@ object Dimension extends Enumeration(initial = -1) {
 }
 
 class Player {
+    var hp: Float = 10.0f
+
     var view_distance: Int = 8
 
     var entity_id: Int = Configuration.newEntityId()

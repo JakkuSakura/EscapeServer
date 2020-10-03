@@ -1,13 +1,13 @@
 package network
 
-import game.EscapeServer
+import game.Server
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 
-class ClientListener {
+class Boostrap {
     def bind(host: String, port: Int): Unit = {
         //配置服务端线程池组
         //用于服务器接收客户端连接
@@ -41,12 +41,13 @@ class ClientListener {
 }
 
 
-object ClientListener {
+object Boostrap {
 
     def main(args: Array[String]): Unit = {
-        EscapeServer.newThread()
+        Server.start()
+        MessageSender.start()
 
-        val server = new ClientListener
+        val server = new Boostrap()
         // Minecraft default port
         server.bind("0.0.0.0", 25565)
     }

@@ -10,16 +10,20 @@ class MessageQueue() {
         var queue = queues.get(clazz)
         if (queue == null) {
             queue = new LinkedBlockingQueue[Any]()
+            println("New queue for " + clazz)
             queues.put(clazz, queue)
         }
         queue.asInstanceOf[LinkedBlockingQueue[T]]
     }
 
     def broadcast[T](msg: T): Unit = {
+        println("Broadcast " + msg)
         getQueue(msg.getClass).asInstanceOf[LinkedBlockingQueue[Any]].put(msg)
     }
 
     def getMessage[T](clazz: Class[T]) : T ={
-        getQueue(clazz).poll()
+        val result = getQueue(clazz).poll()
+        println("Get message " + result)
+        result
     }
 }
