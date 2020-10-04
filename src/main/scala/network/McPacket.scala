@@ -67,18 +67,6 @@ class LookUpdate(p: Player) extends McPacket(0x2E) {
     writeVarInt(0)
 }
 
-class WelcomeWorld(p: Player) extends McPacket(0x26) {
-    // TODO see network.JoinGame 0x26
-    writeInt(p.entity_id + PLAYER_LOGIN_EID_BASE);
-    writeByte(GAMEMODE)
-    writeInt(WORLDTYPE)
-    writeByte(DIFFICULTY)
-    writeByte(0) // deprecated MAX_PLAYERS
-    writeVarString("default")
-    writeByte(0); //Reduce debug info?
-
-}
-
 // Bound to server 0x00
 class HandShaking(byteBuf: ByteBuf) extends McPacket(0x00, byteBuf) {
     val protocol_version: Int = readVarInt()

@@ -20,8 +20,12 @@ object Server extends Thread {
         players(player.player_name) = player
         message_queue.broadcast(MUserLogin(player.player_name))
         message_queue.broadcast(MNetworkMessageOut(player, new JoinGame(player)))
+        //message_queue.broadcast(MNetworkMessageOut(player, sendChunk(0, 0)))
     }
 
+    def sendChunk(x: Int, z: Int): Chunk = {
+        null
+    }
     def removePlayer(id: String): Unit = {
         if (players.remove(id).isDefined)
             message_queue.broadcast(MUserLogout(id))

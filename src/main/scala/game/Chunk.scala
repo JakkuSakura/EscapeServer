@@ -1,5 +1,7 @@
 package game
 
-class Chunk {
+import network.McPacket
+// TODO
+class Chunk extends McPacket() {
 
 }
