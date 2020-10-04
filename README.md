@@ -13,7 +13,7 @@ Protocol 578 of Minecraft 1.15.2
 ## Architecture
 Cluster - Node(\*) - Worlds - Blocks/Entities
 
-Worlds - Pages(16*16 blocks) - game.Chunk(16\*16\*256 blocks, using Quadtree and ) - game.Block
+Worlds - Pages(16*16 blocks) - Chunk(16\*16\*256 blocks, using Quadtree and ) - Block
 
 Message Queue
 

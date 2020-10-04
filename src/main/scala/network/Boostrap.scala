@@ -1,54 +1,90 @@
 package network
 
+import com.github.steveice10.mc.auth.data.GameProfile
+import com.github.steveice10.mc.auth.exception.request.RequestException
+import com.github.steveice10.mc.protocol.MinecraftConstants
+import com.github.steveice10.mc.protocol.MinecraftProtocol
+import com.github.steveice10.mc.protocol.ServerLoginHandler
+import com.github.steveice10.mc.protocol.data.SubProtocol
+import com.github.steveice10.mc.protocol.data.game.entity.player.GameMode
+import com.github.steveice10.mc.protocol.data.game.world.WorldType
+import com.github.steveice10.mc.protocol.data.message.ChatColor
+import com.github.steveice10.mc.protocol.data.message.ChatFormat
+import com.github.steveice10.mc.protocol.data.message.Message
+import com.github.steveice10.mc.protocol.data.message.MessageStyle
+import com.github.steveice10.mc.protocol.data.message.TextMessage
+import com.github.steveice10.mc.protocol.data.message.TranslationMessage
+import com.github.steveice10.mc.protocol.data.status.PlayerInfo
+import com.github.steveice10.mc.protocol.data.status.ServerStatusInfo
+import com.github.steveice10.mc.protocol.data.status.VersionInfo
+import com.github.steveice10.mc.protocol.data.status.handler.ServerInfoBuilder
+import com.github.steveice10.mc.protocol.data.status.handler.ServerInfoHandler
+import com.github.steveice10.mc.protocol.data.status.handler.ServerPingTimeHandler
+import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket
+import com.github.steveice10.mc.protocol.packet.ingame.server.ServerChatPacket
+import com.github.steveice10.mc.protocol.packet.ingame.server.ServerJoinGamePacket
+import com.github.steveice10.packetlib.Client
+import com.github.steveice10.packetlib.ProxyInfo
+import com.github.steveice10.packetlib.Server
+import com.github.steveice10.packetlib.Session
+import com.github.steveice10.packetlib.event.server.ServerAdapter
+import com.github.steveice10.packetlib.event.server.ServerClosedEvent
+import com.github.steveice10.packetlib.event.server.SessionAddedEvent
+import com.github.steveice10.packetlib.event.server.SessionRemovedEvent
+import com.github.steveice10.packetlib.event.session.DisconnectedEvent
+import com.github.steveice10.packetlib.event.session.PacketReceivedEvent
+import com.github.steveice10.packetlib.event.session.SessionAdapter
+import com.github.steveice10.packetlib.tcp.{TcpServerSession, TcpSessionFactory}
+import java.net.Proxy
+import java.util
+
+import com.github.steveice10.mc.protocol.packet.login.client.LoginStartPacket
 import game.Server
-import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.ChannelInitializer
-import io.netty.channel.nio.NioEventLoopGroup
-import io.netty.channel.socket.SocketChannel
-import io.netty.channel.socket.nio.NioServerSocketChannel
-
-class Boostrap {
-    def bind(host: String, port: Int): Unit = {
-        //配置服务端线程池组
-        //用于服务器接收客户端连接
-        val bossGroup = new NioEventLoopGroup()
-        //用户进行SocketChannel的网络读写
-        val workerGroup = new NioEventLoopGroup()
-
-        try {
-            //是Netty用户启动NIO服务端的辅助启动类，降低服务端的开发复杂度
-            val bootstrap = new ServerBootstrap()
-            //将两个NIO线程组作为参数传入到ServerBootstrap
-            bootstrap.group(bossGroup, workerGroup)
-              //创建NioServerSocketChannel
-              .channel(classOf[NioServerSocketChannel])
-              //绑定I/O事件处理类
-              .childHandler(new ChannelInitializer[SocketChannel] {
-                  override def initChannel(ch: SocketChannel): Unit = {
-                      ch.pipeline().addLast(new PacketSplitter())
-                      ch.pipeline().addLast(new InClientHandler())
-                      ch.pipeline().addLast(new PacketEncoder())
-                      println(ch.pipeline())
-                  }
-              })
-            val channelFuture = bootstrap.bind(host, port).sync()
-            channelFuture.channel().closeFuture().sync()
-        } finally {
-            bossGroup.shutdownGracefully()
-            workerGroup.shutdownGracefully()
-        }
-    }
-}
 
 
 object Boostrap {
+    private val VERIFY_USERS: Boolean = true
+    private val HOST: String = "0.0.0.0"
+    private val PORT: Int = 25565
+    private val AUTH_PROXY: Proxy = Proxy.NO_PROXY
 
     def main(args: Array[String]): Unit = {
-        Server.start()
+        game.Server.start()
         MessageSender.start()
 
-        val server = new Boostrap()
-        // Minecraft default port
-        server.bind("0.0.0.0", 25565)
+        val server = new Server(HOST, PORT, classOf[MinecraftProtocol], new TcpSessionFactory())
+        server.setGlobalFlag(MinecraftConstants.AUTH_PROXY_KEY, AUTH_PROXY);
+        server.setGlobalFlag(MinecraftConstants.VERIFY_USERS_KEY, VERIFY_USERS);
+        server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, new ServerInfoBuilder {
+            override def buildInfo(session: Session): ServerStatusInfo =
+                new ServerStatusInfo(
+                    new VersionInfo(MinecraftConstants.GAME_VERSION, MinecraftConstants.PROTOCOL_VERSION),
+                    new PlayerInfo(999, 999, Array.empty),
+                    new TextMessage("Hello world!"),
+                    null
+                )
+
+        })
+
+        server.setGlobalFlag(MinecraftConstants.SERVER_COMPRESSION_THRESHOLD, 100)
+
+        server.addListener(new ServerAdapter() {
+            override def serverClosed(event: ServerClosedEvent): Unit = {
+                println("Server closed.")
+            }
+
+            override def sessionAdded(event: SessionAddedEvent): Unit = {
+                event.getSession.addListener(new network.Client)
+            }
+
+            override def sessionRemoved(event: SessionRemovedEvent): Unit = {
+                val protocol = event.getSession.getPacketProtocol.asInstanceOf[MinecraftProtocol]
+                if (protocol.getSubProtocol == SubProtocol.GAME) {
+                    println("Closing server.")
+                    event.getServer.close(false)
+                }
+            }
+        })
+        server.bind()
     }
 }

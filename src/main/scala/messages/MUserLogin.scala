@@ -1,7 +1,7 @@
 package messages
 
-import game.Player
-import network.McPacket
+import player.Player
+import protocols.McPacket
 
 case class MUserLogin(name: String) extends Message
 case class MUserLogout(name: String) extends Message

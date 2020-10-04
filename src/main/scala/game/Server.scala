@@ -2,8 +2,11 @@ package game
 
 import java.util.concurrent.LinkedBlockingQueue
 
+import com.github.steveice10.mc.protocol.data.game.chunk.Chunk
 import messages.{MNetworkIn, MNetworkMessageOut, MUserLogin, MUserLogout, MessageQueue}
-import network.{Client, JoinGame}
+import network.Client
+import player.Player
+import protocols.JoinGame
 
 import scala.collection.{concurrent, mutable}
 

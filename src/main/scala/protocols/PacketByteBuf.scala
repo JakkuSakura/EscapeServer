@@ -1,13 +1,13 @@
-package network
+package protocols
 
-import java.io.IOException
+import java.io.{DataOutput, IOException}
 import java.util.UUID
 
 import com.github.steveice10.packetlib.io.NetOutput
 import io.netty.buffer.ByteBuf
 import io.netty.util.CharsetUtil
 
-class PacketByteBuf(var buf: ByteBuf) extends NetOutput {
+class PacketByteBuf(var buf: ByteBuf) extends NetOutput with DataOutput {
     def readableBytes: Int = buf.readableBytes()
 
     def writableBytes: Int = buf.writableBytes()
@@ -190,5 +190,25 @@ class PacketByteBuf(var buf: ByteBuf) extends NetOutput {
     }
 
     override def flush(): Unit = {
+    }
+
+    override def write(b: Int): Unit = writeInt(b)
+
+    override def write(b: Array[Byte]): Unit = writeBytes(b)
+
+    override def write(b: Array[Byte], off: Int, len: Int): Unit = {
+        var i = 0
+        while (i < len) {
+            writeByte(b(i + off))
+            i += 1
+        }
+    }
+
+    override def writeChars(s: String): Unit = {
+        writeString(s)
+    }
+
+    override def writeUTF(s: String): Unit = {
+        writeString(s)
     }
 }

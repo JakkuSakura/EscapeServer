@@ -8,9 +8,9 @@ object MessageSender extends Thread {
         val out = Server.message_queue.getQueue(classOf[MNetworkMessageOut])
 
         while(true) {
-            val MNetworkMessageOut(player, msg) = out.take().asInstanceOf[MNetworkMessageOut]
+            val MNetworkMessageOut(player, msg) = out.take()
             println("get one message")
-            ClientManger.getClient(player).ctx.channel().writeAndFlush(msg)
+            //ClientManger.getClient(player).channel().writeAndFlush(msg)
 
         }
     }
