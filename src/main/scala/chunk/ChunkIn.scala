@@ -1,10 +1,8 @@
 package chunk
 
-import protocols.ChunkSection
-
 class ChunkIn {
-    def getChunkSections: Seq[ChunkSection] = {
-        Seq.empty[ChunkSection]
+    def getChunkSections: Seq[Any] = {
+        Seq.empty[Any]
     }
 
     val chunk_pos: ChunkPos = ChunkPos(0, 0)

@@ -1,45 +1,15 @@
 package network
 
-import com.github.steveice10.mc.auth.data.GameProfile
-import com.github.steveice10.mc.auth.exception.request.RequestException
-import com.github.steveice10.mc.protocol.MinecraftConstants
-import com.github.steveice10.mc.protocol.MinecraftProtocol
-import com.github.steveice10.mc.protocol.ServerLoginHandler
-import com.github.steveice10.mc.protocol.data.SubProtocol
-import com.github.steveice10.mc.protocol.data.game.entity.player.GameMode
-import com.github.steveice10.mc.protocol.data.game.world.WorldType
-import com.github.steveice10.mc.protocol.data.message.ChatColor
-import com.github.steveice10.mc.protocol.data.message.ChatFormat
-import com.github.steveice10.mc.protocol.data.message.Message
-import com.github.steveice10.mc.protocol.data.message.MessageStyle
-import com.github.steveice10.mc.protocol.data.message.TextMessage
-import com.github.steveice10.mc.protocol.data.message.TranslationMessage
-import com.github.steveice10.mc.protocol.data.status.PlayerInfo
-import com.github.steveice10.mc.protocol.data.status.ServerStatusInfo
-import com.github.steveice10.mc.protocol.data.status.VersionInfo
-import com.github.steveice10.mc.protocol.data.status.handler.ServerInfoBuilder
-import com.github.steveice10.mc.protocol.data.status.handler.ServerInfoHandler
-import com.github.steveice10.mc.protocol.data.status.handler.ServerPingTimeHandler
-import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket
-import com.github.steveice10.mc.protocol.packet.ingame.server.ServerChatPacket
-import com.github.steveice10.mc.protocol.packet.ingame.server.ServerJoinGamePacket
-import com.github.steveice10.packetlib.Client
-import com.github.steveice10.packetlib.ProxyInfo
-import com.github.steveice10.packetlib.Server
-import com.github.steveice10.packetlib.Session
-import com.github.steveice10.packetlib.event.server.ServerAdapter
-import com.github.steveice10.packetlib.event.server.ServerClosedEvent
-import com.github.steveice10.packetlib.event.server.SessionAddedEvent
-import com.github.steveice10.packetlib.event.server.SessionRemovedEvent
-import com.github.steveice10.packetlib.event.session.DisconnectedEvent
-import com.github.steveice10.packetlib.event.session.PacketReceivedEvent
-import com.github.steveice10.packetlib.event.session.SessionAdapter
-import com.github.steveice10.packetlib.tcp.{TcpServerSession, TcpSessionFactory}
 import java.net.Proxy
-import java.util
 
-import com.github.steveice10.mc.protocol.packet.login.client.LoginStartPacket
-import game.Server
+import com.github.steveice10.mc.protocol.{MinecraftConstants, MinecraftProtocol}
+import com.github.steveice10.mc.protocol.data.SubProtocol
+import com.github.steveice10.mc.protocol.data.message.TextMessage
+import com.github.steveice10.mc.protocol.data.status.{PlayerInfo, ServerStatusInfo, VersionInfo}
+import com.github.steveice10.mc.protocol.data.status.handler.ServerInfoBuilder
+import com.github.steveice10.packetlib.{Server, Session}
+import com.github.steveice10.packetlib.event.server.{ServerAdapter, ServerClosedEvent, SessionAddedEvent, SessionRemovedEvent}
+import com.github.steveice10.packetlib.tcp.TcpSessionFactory
 
 
 object Boostrap {
@@ -74,14 +44,13 @@ object Boostrap {
             }
 
             override def sessionAdded(event: SessionAddedEvent): Unit = {
-                event.getSession.addListener(new network.Client)
+                event.getSession.addListener(new network.Client(event.getSession))
             }
 
             override def sessionRemoved(event: SessionRemovedEvent): Unit = {
                 val protocol = event.getSession.getPacketProtocol.asInstanceOf[MinecraftProtocol]
                 if (protocol.getSubProtocol == SubProtocol.GAME) {
-                    println("Closing server.")
-                    event.getServer.close(false)
+                    // some process?
                 }
             }
         })

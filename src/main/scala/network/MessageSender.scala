@@ -1,16 +1,16 @@
 package network
 
 import game.Server
-import messages.MNetworkMessageOut
+import messages.MNetworkOut
 
 object MessageSender extends Thread {
     override def run(): Unit = {
-        val out = Server.message_queue.getQueue(classOf[MNetworkMessageOut])
+        val out = Server.message_queue.getQueue[MNetworkOut](classOf[MNetworkOut])
 
         while(true) {
-            val MNetworkMessageOut(player, msg) = out.take()
-            println("get one message")
-            //ClientManger.getClient(player).channel().writeAndFlush(msg)
+            val MNetworkOut(player, msg) = out.take()
+            val client = ClientManger.getClient(player)
+            client.session.send(msg)
 
         }
     }

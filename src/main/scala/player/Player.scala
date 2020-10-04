@@ -22,7 +22,7 @@ class Player {
 
     var dimension: Dimension.Value = Dimension.Overworld
 
-    var x, y, stance, z, yaw, pitch: Float = _
+    var x, y, z, yaw, pitch: Float = _
     var ox, oy, os, oz, ow, op: Int = _
 
     var n_yaw, n_pitch: Int = _
