@@ -3,18 +3,29 @@ package block
 import scala.collection.mutable
 
 object BlockCollection {
-    val map = new mutable.HashMap[String, BlockState]()
+    val str2state = new mutable.HashMap[String, BlockState]()
+    val state2id = new mutable.HashMap[BlockState, Int]()
+
     val Air = new Air()
-    map.put("", Air)
-    map.put("Air", Air)
+    str2state.put("", Air)
+    str2state.put("Air", Air)
+    state2id.put(Air, 0)
 
     val Stone = new Stone()
-    map.put("Stone", Stone)
+    str2state.put("Stone", Stone)
+    state2id.put(Stone, 1)
+
 
     val UnknownBlock = new UnknownBlockState()
-    map.put("UnknownBlock", UnknownBlock)
+    str2state.put("UnknownBlock", UnknownBlock)
+    state2id.put(UnknownBlock, 999)
+
 
     def getBlock(block_type: String): Option[BlockState] = {
-        map.get(block_type)
+        str2state.get(block_type)
+    }
+
+    def getBlockID(blockState: BlockState) : Int = {
+        state2id(blockState)
     }
 }

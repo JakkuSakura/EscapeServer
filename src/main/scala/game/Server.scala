@@ -1,17 +1,16 @@
 package game
 
-import java.util.concurrent.LinkedBlockingQueue
-
-import com.github.steveice10.mc.protocol.data.game.{PlayerListEntry, PlayerListEntryAction}
-import com.github.steveice10.mc.protocol.data.game.chunk.{Chunk, Column, FlexibleStorage}
+import chunk.ChunkPos
+import com.github.steveice10.mc.protocol.data.game.entity.metadata.Position
 import com.github.steveice10.mc.protocol.data.game.entity.player.GameMode
 import com.github.steveice10.mc.protocol.data.game.setting.Difficulty
 import com.github.steveice10.mc.protocol.data.game.world.WorldType
-import com.github.steveice10.mc.protocol.packet.ingame.client.player.{ClientPlayerPositionRotationPacket, ClientPlayerSwingArmPacket}
+import com.github.steveice10.mc.protocol.data.game.{PlayerListEntry, PlayerListEntryAction}
+import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket
+import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionRotationPacket
+import com.github.steveice10.mc.protocol.packet.ingame.server._
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.player.{ServerPlayerAbilitiesPacket, ServerPlayerChangeHeldItemPacket, ServerPlayerPositionRotationPacket}
-import com.github.steveice10.mc.protocol.packet.ingame.server.world.{ServerChunkDataPacket, ServerUpdateTimePacket}
-import com.github.steveice10.mc.protocol.packet.ingame.server.{ServerChatPacket, ServerDeclareRecipesPacket, ServerDifficultyPacket, ServerJoinGamePacket, ServerPlayerListEntryPacket}
-import com.github.steveice10.opennbt.tag.builtin.{CompoundTag, LongArrayTag}
+import com.github.steveice10.mc.protocol.packet.ingame.server.world.{ServerSpawnPositionPacket, ServerUpdateTimePacket}
 import messages._
 import player.Player
 
@@ -25,10 +24,11 @@ object Server extends Thread {
     val message_queue = new MessageQueue()
     val world: World = new CubedWorld()
     var teleport_id: Int = 0
+    var command_handler: CommandHandler = new CommandHandler()
 
     def addPlayer(player: Player): Unit = {
         players(player.player_name) = player
-        player.y = 10
+        player.y = 64
 
         message_queue.broadcast(MUserLogin(player.player_name))
 
@@ -40,41 +40,34 @@ object Server extends Thread {
         message_queue.broadcast(MNetworkOut(player, new ServerPlayerChangeHeldItemPacket(0)))
         message_queue.broadcast(MNetworkOut(player, new ServerDeclareRecipesPacket(Array.empty)))
         sendPlayerPosition(player)
-        message_queue.broadcast(MNetworkOut(player, new ServerPlayerListEntryPacket(PlayerListEntryAction.ADD_PLAYER, Array(new PlayerListEntry(player.profile, GameMode.CREATIVE)))))
 
+        message_queue.broadcast(MNetworkOut(player, new ServerPlayerListEntryPacket(PlayerListEntryAction.ADD_PLAYER, Array(new PlayerListEntry(player.profile, GameMode.CREATIVE)))))
         //ServerEntityMetadataPacket(entityId=0, metadata=[EntityMetadata(id=16, type=BYTE, value=127)])
 
-        //message_queue.broadcast(MNetworkOut(player, new ServerSpawnPositionPacket(new Position(player.x.toInt, player.y.toInt, player.z.toInt))))
-        //message_queue.broadcast(MNetworkOut(player, new ServerPlayerListDataPacket()))
-        message_queue.broadcast(MNetworkOut(player, new ServerUpdateTimePacket(0,0)))
+        message_queue.broadcast(MNetworkOut(player, new ServerSpawnPositionPacket(new Position(player.x.toInt, player.y.toInt, player.z.toInt))))
 
+        message_queue.broadcast(MNetworkOut(player, new ServerUpdateTimePacket(0, 0)))
 
-        for (x <- -3 until 3)
-            for (z <- -3 until 3)
-                message_queue.broadcast(MNetworkOut(player, sendChunk(x, z)))
-
+        sendNearbyChunks(player, first_load = true)
         sendPlayerPosition(player)
     }
+
+    def sendNearbyChunks(player: Player, first_load: Boolean): Unit = {
+        val chk = world.toChunkPos(player.x.toInt, player.y.toInt)
+        for (x <- chk.x - 3 until chk.x + 3)
+            if (world.isInBoundary(ChunkPos(x, chk.z)))
+                for (z <- chk.z - 3 until chk.z + 3) {
+                    if (world.isInBoundary(ChunkPos(x, z)))
+                        message_queue.broadcast(MNetworkOut(player, world.getChunk(ChunkPos(x, z), first_load)))
+                }
+
+    }
+
     def sendPlayerPosition(player: Player): Unit = {
         message_queue.broadcast(MNetworkOut(player, new ServerPlayerPositionRotationPacket(player.x, player.y, player.z, player.yaw, player.pitch, teleport_id)))
         teleport_id += 1
     }
 
-    def sendChunk(x: Int, z: Int): ServerChunkDataPacket = {
-        val chunks = new Array[Chunk](16)
-        for (i <- 0 until 16) {
-            //chunks(i) = new Chunk()
-        }
-        val ba = new FlexibleStorage(9, 256)
-        for (i <- 0 until 256)
-            ba.set(i, 0)
-
-        val hm = new CompoundTag("")
-        hm.put(new LongArrayTag("MOTION_BLOCKING", ba.getData))
-        val col = new Column(x, z, chunks, Array.empty[CompoundTag], hm, new Array[Int](1024))
-        val cd = new ServerChunkDataPacket(col)
-        cd
-    }
 
     def removePlayer(id: String): Unit = {
         if (players.remove(id).isDefined)
@@ -84,31 +77,29 @@ object Server extends Thread {
     def playerUpdate(player: Player): Unit = {
         if (player.hp > 0) {
             //player.z += 0.1f
-            //teleport_id += 1
         }
     }
 
+    def processNetworkIn[T](clazz: Class[T], handle: (Player, T) => Unit): Unit = {
+        message_queue.processAll(clazz, in => {
+            val MNetworkIn(player, msg) = in
+            val packet = msg.asInstanceOf[T]
+            handle(player, packet)
+        })
+    }
+
     def updateServer(): Unit = {
-        val clientPlayerPositionRotationQueue = message_queue.getQueue(classOf[ClientPlayerPositionRotationPacket])
-          .asInstanceOf[LinkedBlockingQueue[MNetworkIn]]
-        while (!clientPlayerPositionRotationQueue.isEmpty) {
-            val MNetworkIn(player, msg) = clientPlayerPositionRotationQueue.poll()
-            val packet = msg.asInstanceOf[ClientPlayerPositionRotationPacket]
+        processNetworkIn[ClientPlayerPositionRotationPacket](classOf[ClientPlayerPositionRotationPacket], (player, packet) => {
             player.x = packet.getX.asInstanceOf[Float]
             player.y = packet.getY.asInstanceOf[Float]
             player.z = packet.getZ.asInstanceOf[Float]
             player.pitch = packet.getPitch
             player.yaw = packet.getYaw
-        }
-        val client_swing_arms = message_queue.getQueue(classOf[ClientPlayerSwingArmPacket])
-          .asInstanceOf[LinkedBlockingQueue[MNetworkIn]]
-        while (!client_swing_arms.isEmpty) {
-            val MNetworkIn(player, msg) = client_swing_arms.poll()
-            val packet = msg.asInstanceOf[ClientPlayerSwingArmPacket]
-            //message_queue.broadcast(MNetworkOut(player, new ServerEntityAnimationPacket(0, Animation.SWING_ARM)))
-            packet.getHand
-        }
+        })
 
+        processNetworkIn[ClientChatPacket](classOf[ClientChatPacket], (player, packet) => {
+            command_handler.process(player, packet.getMessage)
+        })
 
         players.foreachEntry((_, p) => playerUpdate(p))
 

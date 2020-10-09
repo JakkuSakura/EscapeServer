@@ -31,4 +31,11 @@ class MessageQueue() {
         println("Get message " + result)
         result.asInstanceOf[T]
     }
+
+    def processAll[T](clazz: Class[T], process: Object => Unit): Unit = {
+        val queue = getQueue(clazz)
+        while (!queue.isEmpty) {
+            process(queue.poll())
+        }
+    }
 }
