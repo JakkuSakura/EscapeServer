@@ -19,3 +19,9 @@ class Air extends BlockState {
 class Stone extends BlockState {
 
 }
+class Granite extends BlockState {
+
+}
+class Grass extends BlockState {
+
+}

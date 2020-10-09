@@ -25,3 +25,8 @@ Thank https://github.com/cnlohr/avrcraft for inspiration and simple implementati
 Thank https://wiki.vg/ for reverse engineering of protocols
 
 Thank https://github.com/barneygale/quarry/ for readable protocol examples
+
+Thank https://github.com/GoLangMc/minecraft-server for a minimal working example
+
+Thank https://github.com/ProtocolSupport/ProtocolSupport for block mappings
+

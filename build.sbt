@@ -26,3 +26,5 @@ libraryDependencies += "com.google.code.gson" % "gson" % "2.8.6"
 
 resolvers += "Jitpack" at "https://jitpack.io/"
 libraryDependencies += "com.github.Steveice10" % "MCProtocolLib" % "1.15.2-1"
+libraryDependencies += "com.github.ProtocolSupport" % "ProtocolSupport" % "master-SNAPSHOT"
+

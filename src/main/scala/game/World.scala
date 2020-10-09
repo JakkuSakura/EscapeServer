@@ -1,7 +1,7 @@
 package game
 
-import block.BlockCollection.Air
-import block.{BlockCollection, BlockPos, BlockPos2D, BlockState}
+import block.BlockRegistry.Air
+import block.{BlockRegistry, BlockPos, BlockPos2D, BlockState}
 import chunk.ChunkPos
 import com.github.steveice10.mc.protocol.data.game.chunk.{Chunk, Column, FlexibleStorage}
 import com.github.steveice10.mc.protocol.data.game.world
@@ -13,21 +13,33 @@ abstract class World {
 
     def setBlock(x: Int, y: Int, z: Int, block_state: BlockState): Unit
 
-    def getBlockID(x: Int, y: Int, z: Int): Int = BlockCollection.getBlockID(getBlock(x, y, z))
+    def getBlockID(x: Int, y: Int, z: Int): Int = BlockRegistry.getBlockID(getBlock(x, y, z))
 
     def toChunkPos(x: Int, y: Int): ChunkPos = ChunkPos(x / 16, y / 16)
+
+    @Deprecated
+    def positionInChunk(x: Int, y: Int, z: Int): (Int, Int, Int, Int) = {
+        (y / 16, x % 16, y % 16, z % 16)
+    }
 
     def getChunk(pos: ChunkPos, first_load: Boolean): ServerChunkDataPacket = {
         val ChunkPos(x, z) = pos
         val chunks = new Array[Chunk](16)
         for (i <- 0 until 16) {
             chunks(i) = new Chunk()
-            chunks(i).set(0, 0, 0, new world.block.BlockState(getBlockID(0, 0, 0)))
+            if (i < 4) {
+                for (x <- 0 until 16) {
+                    for (y <- 0 until 16)
+                        for (z <- 0 until 16) {
+                            chunks(i).set(x, y, z, new world.block.BlockState(BlockRegistry.getBlockID(BlockRegistry.Grass)))
+                        }
+                }
+            }
             // TODO
         }
         val ba = new FlexibleStorage(9, 256)
         for (i <- 0 until 256)
-            ba.set(i, 0)
+            ba.set(i, 255)
 
         val hm = new CompoundTag("")
         hm.put(new LongArrayTag("MOTION_BLOCKING", ba.getData))

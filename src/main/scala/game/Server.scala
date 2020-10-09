@@ -36,7 +36,7 @@ object Server extends Thread {
         message_queue.broadcast(MNetworkOut(player, new ServerJoinGamePacket(0, false, GameMode.CREATIVE, 0, hashed_seed, 100, WorldType.DEFAULT, 16, false, true)))
         // plugin packet
         message_queue.broadcast(MNetworkOut(player, new ServerDifficultyPacket(Difficulty.PEACEFUL, true)))
-        message_queue.broadcast(MNetworkOut(player, new ServerPlayerAbilitiesPacket(true, true, true, false, 0.05f, 0.1f)))
+        message_queue.broadcast(MNetworkOut(player, new ServerPlayerAbilitiesPacket(true, true, false, true, 0.05f, 0.1f)))
         message_queue.broadcast(MNetworkOut(player, new ServerPlayerChangeHeldItemPacket(0)))
         message_queue.broadcast(MNetworkOut(player, new ServerDeclareRecipesPacket(Array.empty)))
         sendPlayerPosition(player)
