@@ -1,9 +1,10 @@
 package game
 
 import block.BlockCollection.Air
-import block.{BlockPos, BlockPos2D, BlockState}
+import block.{BlockCollection, BlockPos, BlockPos2D, BlockState}
 import chunk.ChunkPos
 import com.github.steveice10.mc.protocol.data.game.chunk.{Chunk, Column, FlexibleStorage}
+import com.github.steveice10.mc.protocol.data.game.world
 import com.github.steveice10.mc.protocol.packet.ingame.server.world.ServerChunkDataPacket
 import com.github.steveice10.opennbt.tag.builtin.{CompoundTag, LongArrayTag}
 
@@ -12,6 +13,8 @@ abstract class World {
 
     def setBlock(x: Int, y: Int, z: Int, block_state: BlockState): Unit
 
+    def getBlockID(x: Int, y: Int, z: Int): Int = BlockCollection.getBlockID(getBlock(x, y, z))
+
     def toChunkPos(x: Int, y: Int): ChunkPos = ChunkPos(x / 16, y / 16)
 
     def getChunk(pos: ChunkPos, first_load: Boolean): ServerChunkDataPacket = {
@@ -19,6 +22,8 @@ abstract class World {
         val chunks = new Array[Chunk](16)
         for (i <- 0 until 16) {
             chunks(i) = new Chunk()
+            chunks(i).set(0, 0, 0, new world.block.BlockState(getBlockID(0, 0, 0)))
+            // TODO
         }
         val ba = new FlexibleStorage(9, 256)
         for (i <- 0 until 256)
@@ -61,7 +66,7 @@ class CubedWorld extends World {
     private val map = Array.ofDim[BlockState](256, 256, 256)
 
     override def getBlock(x: Int, y: Int, z: Int): BlockState = {
-        val state = map(x - 128)(y)(z - 127);
+        val state = map(x - 128)(y)(z - 127)
         if (state == null)
             return Air;
         state
@@ -72,4 +77,5 @@ class CubedWorld extends World {
     }
 
     override def getWorldBoundary: (BlockPos, BlockPos) = (BlockPos(-128, 0, -128), BlockPos(127, 255, 127))
+
 }
