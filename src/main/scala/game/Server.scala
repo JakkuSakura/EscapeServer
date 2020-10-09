@@ -47,27 +47,24 @@ object Server extends Thread {
         message_queue.broadcast(MNetworkOut(player, new ServerSpawnPositionPacket(new Position(player.x.toInt, player.y.toInt, player.z.toInt))))
 
         message_queue.broadcast(MNetworkOut(player, new ServerUpdateTimePacket(0, 0)))
-
         sendNearbyChunks(player, first_load = true)
         sendPlayerPosition(player)
     }
 
     def sendNearbyChunks(player: Player, first_load: Boolean): Unit = {
-        val chk = world.toChunkPos(player.x.toInt, player.y.toInt)
+        val chk = world.toChunkPos(player.x.round, player.z.round)
         for (x <- chk.x - 3 until chk.x + 3)
             if (world.isInBoundary(ChunkPos(x, chk.z)))
                 for (z <- chk.z - 3 until chk.z + 3) {
                     if (world.isInBoundary(ChunkPos(x, z)))
                         message_queue.broadcast(MNetworkOut(player, world.getChunk(ChunkPos(x, z), first_load)))
                 }
-
     }
 
     def sendPlayerPosition(player: Player): Unit = {
         message_queue.broadcast(MNetworkOut(player, new ServerPlayerPositionRotationPacket(player.x, player.y, player.z, player.yaw, player.pitch, teleport_id)))
         teleport_id += 1
     }
-
 
     def removePlayer(id: String): Unit = {
         if (players.remove(id).isDefined)
