@@ -1,6 +1,8 @@
 package player
 
-import utils.Configuration
+import java.util.UUID
+
+import com.github.steveice10.mc.auth.data.GameProfile
 
 object GameMode extends Enumeration {
     val Survival, Creative, Adventure, Spectator = Value
@@ -13,11 +15,13 @@ object Dimension extends Enumeration(initial = -1) {
 }
 
 class Player {
+    var profile: GameProfile = _
+
     var hp: Float = 10.0f
 
     var view_distance: Int = 8
 
-    var entity_id: Int = Configuration.newEntityId()
+    var entity_id: UUID = _
     var game_mode: GameMode.Value = GameMode.Creative
 
     var dimension: Dimension.Value = Dimension.Overworld
